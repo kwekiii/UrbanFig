@@ -1,4 +1,4 @@
-# load libraries
+# load libraries ----
 library(rgdal)
 library(rgeos)
 library(raster)
@@ -14,7 +14,7 @@ library(labdsv)
 library(tidyverse)
 library(readxl)
 
-# load landscape and tree data
+# load landscape and tree data ----
 
 sourceFilePath <- "data/UrbanFig_data.xlsx"
 
@@ -27,7 +27,7 @@ canopy.ly<-gBuffer(canopy.ly, width = 0) #canopy layer contains self-intersectin
 roads.ly<-readOGR(".//../GIS", "L126_road")
 others.ly<-readOGR(".//../GIS", "L126_built+waterbody")
 
-## 126-m radius buffer
+## 126-m radius buffer ----
 
 trees_buffer126<-gBuffer(trees.ly, width = 126, byid = TRUE)
 
@@ -54,7 +54,7 @@ built_buffer126@data$area<-gArea(built_buffer126, byid = TRUE)
 env$built126<-with(built_buffer126@data, tapply(area, Name.2, sum))/(pi*126^2)
 env$built126<-replace(env$built126, is.na(env$built126), 0)
 
-## 50-m radius buffer
+## 50-m radius buffer ----
 
 trees_buffer50<-gBuffer(trees.ly, width = 50, byid = TRUE)
 
@@ -85,7 +85,7 @@ env.unscaled<-env
 env<-env[,-c(6,10:13)]
 env[,c(6:16)]<-scale(env.unscaled[,c(7:9,14:21)])
 
-# load bird survey data
+# load bird survey data ----
 
 bird <- read_excel(sourceFilePath, sheet = "bird")
 status <- read_excel(sourceFilePath, sheet = "status")
@@ -106,7 +106,7 @@ nfvfnf.eabund<-apply(nfvfnf.e.com,1,sum)
 nfvfnf.I.com<-nfvfnf.com[,status$I==1&status$F==0]
 nfvfnf.Iabund<-apply(nfvfnf.I.com,1,sum)
 
-## fignf vs. figf
+## fignf vs. figf ----
 bird$index2<-with(bird, paste(survey_type, tree_ID))
 fnfvff.com<-xtabs(count~index2+bird_sp, data=
 	aggregate(count~index2+bird_sp, FUN=max, data=bird[bird$survey_type!="nonfig",])
@@ -129,11 +129,11 @@ figging<-factor(figging, levels=c("fignf","figf"))
 tree_ID2<-sapply(strsplit(rownames(fnfvff.com), " "), "[")[2,]
 tree_sp2<-env$tree_sp[match(tree_ID2, env$tree_ID)]
 
-# GLMMs
+# GLMMs ----
 
-## nonfig vs. fignf
+## nonfig vs. fignf ----
 
-### Species richness
+### Species richness ----
 
 nfvfnf.D0.mod.null1<-glmer(nfvfnf.D0~1+(1|tree_sp)+(1|site),
                            data=env, subset=env$tree_ID!="D2Fe", family=poisson, na.action="na.fail")
@@ -172,7 +172,7 @@ write.csv(
 nfvfnf.D0.mod.top1<-get.models(nfvfnf.D0.mod.tab, subset = 1)
 deviance(nfvfnf.D0.mod.top1[[1]])/df.residual(nfvfnf.D0.mod.top1[[1]]) # no overdispersion
 
-### First-order diversity
+### First-order diversity ----
 
 nfvfnf.D1.mod.null1<-lmer(log(nfvfnf.D1)~1+(1|tree_sp)+(1|site),
                       data=env, subset=env$tree_ID!="D2Fe", na.action="na.fail")
@@ -210,7 +210,7 @@ write.csv(
 
 nfvfnf.D1.mod.top1<-get.models(nfvfnf.D1.mod.tab, subset = 1)
 
-### Second-order diversity
+### Second-order diversity ----
 
 nfvfnf.D2.mod.null1<-lmer(log(nfvfnf.D2)~1+(1|tree_sp)+(1|site),
                      data=env, subset=env$tree_ID!="D2Fe", na.action="na.fail")
@@ -248,7 +248,7 @@ write.csv(
 
 nfvfnf.D2.mod.top1<-get.models(nfvfnf.D2.mod.tab, subset = 1)
 
-### Exotic abundance
+### Exotic abundance ----
 
 nfvfnf.eabund.mod.null1<-glmer.nb(nfvfnf.eabund~1+(1|tree_sp)+(1|site),
                                data=env, subset=env$tree_ID!="D2Fe", na.action="na.fail")
@@ -286,7 +286,7 @@ write.csv(
 
 nfvfnf.eabund.mod.top1<-get.models(nfvfnf.eabund.mod.tab, subset = 1)
 
-### Insectivore abundance
+### Insectivore abundance ----
 
 nfvfnf.Iabund.mod.null1<-glmer.nb(nfvfnf.Iabund~1+(1|tree_sp)+(1|site), control = glmerControl(optimizer="bobyqa"),
                                   data=env, subset=env$tree_ID!="D2Fe", na.action="na.fail")
@@ -324,9 +324,9 @@ write.csv(
 
 nfvfnf.Iabund.mod.top1<-get.models(nfvfnf.Iabund.mod.tab, subset = 1)
 
-## fignf vs. figf
+## fignf vs. figf ----
 
-### Species richness
+### Species richness ----
 
 fnfvff.D0.mod.null1<-glmer(fnfvff.D0~1+(1|tree_ID2)+(1|tree_sp2), family=poisson)
 fnfvff.D0.mod.null2<-glmer(fnfvff.D0~1+(1|tree_ID2), family=poisson)
@@ -351,7 +351,7 @@ fnfvff.D0.mod.tab<-cbind(fnfvff.D0.mod.tab1, fnfvff.D0.mod.tab.se)[,c(1,10,2,11,
 
 deviance(fnfvff.D0.mod)/df.residual(fnfvff.D0.mod) #under-dispersed
 
-### First order diversity
+### First order diversity ----
 
 fnfvff.D1.mod.null1<-lmer(log(fnfvff.D1)~1+(1|tree_ID2)+(1|tree_sp2))
 fnfvff.D1.mod.null2<-lmer(log(fnfvff.D1)~1+(1|tree_ID2))
@@ -375,7 +375,7 @@ for (i in 1:2) {
 
 fnfvff.D1.mod.tab<-cbind(fnfvff.D1.mod.tab1, fnfvff.D1.mod.tab.se)[,c(1,10,2,11,3:9)]
 
-### Second order diversity
+### Second order diversity ----
 
 fnfvff.D2.mod.null1<-lmer(log(fnfvff.D2)~1+(1|tree_ID2)+(1|tree_sp2))
 fnfvff.D2.mod.null2<-lmer(log(fnfvff.D2)~1+(1|tree_ID2))
@@ -399,7 +399,7 @@ for (i in 1:2) {
 
 fnfvff.D2.mod.tab<-cbind(fnfvff.D2.mod.tab1, fnfvff.D2.mod.tab.se)[,c(1,10,2,11,3:9)]
 
-### Exotic abundance
+### Exotic abundance ----
 
 fnfvff.eabund.mod.null1<-glmer.nb(fnfvff.eabund~1+(1|tree_ID2)+(1|tree_sp2), control = glmerControl(optimizer = "bobyqa"))
 fnfvff.eabund.mod.null2<-glmer.nb(fnfvff.eabund~1+(1|tree_ID2))
@@ -422,7 +422,7 @@ for (i in 1:2) {
 
 fnfvff.eabund.mod.tab<-cbind(fnfvff.eabund.mod.tab1, fnfvff.eabund.mod.tab.se)[,c(1,11,2,12,3:4,6:10)]
 
-### Insectivore abundance
+### Insectivore abundance ----
 
 fnfvff.Iabund.mod.null1<-glmer(fnfvff.Iabund~(1|tree_ID2)+(1|tree_sp2), family = poisson)
 fnfvff.Iabund.mod.null2<-glmer(fnfvff.Iabund~(1|tree_ID2), family=poisson)
@@ -447,14 +447,14 @@ for (i in 1:2) {
 
 fnfvff.Iabund.mod.tab<-cbind(fnfvff.Iabund.mod.tab1, fnfvff.Iabund.mod.tab.se)[,c(1,10,2,11,3:9)]
 
-### consolidated table
+### consolidated table ----
 
 write.csv(
   rbind(fnfvff.D0.mod.tab, fnfvff.D1.mod.tab, fnfvff.D2.mod.tab, fnfvff.eabund.mod.tab, fnfvff.Iabund.mod.tab)
   , "fnfvff_modtab.csv", quote = FALSE
 )
 
-## other tables
+## other tables ----
 
 nfvfnf.nulltab<-data.frame(
   D0=AICc(nfvfnf.D0.mod.null1, nfvfnf.D0.mod.null2, nfvfnf.D0.mod.null3, nfvfnf.D0.mod.null4)$AICc,
